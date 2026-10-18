@@ -31,8 +31,8 @@ app.whenReady().then(async () => {
         views.showView(States.CONNECTED);
         document.querySelector('#s2style-sheet').href='css/select2.min.css';
         const press = (key, options = {}, target = window) => target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...options }));
-        for (const key of ['w', 'a', 's', 'd', ' ', 'q', 'e', 'r', 'f']) press(key);
-        assert.deepEqual(sent.map(x => x.key), ['up','left','down','right','select','volume_down','volume_up','menu','home']);
+        for (const key of ['w', 'a', 's', 'd', ' ', 'q', 'e', 'r', 'f', 'v', 'V', 'p']) press(key);
+        assert.deepEqual(sent.map(x => x.key), ['up','left','down','right','select','volume_down','volume_up','menu','home','play_pause','play_pause','play_pause']);
         sent.length = 0;
         press('F', {shiftKey: true}); press('W', {shiftKey: true});
         assert.deepEqual(sent, [{key:'home',action:'Hold'}, {key:'up',action:'Hold'}]);

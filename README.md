@@ -24,11 +24,11 @@ This fork uses a silver Siri Remote layout with a circular clickpad, Back and TV
 | R | Back |
 | F | TV |
 | Shift + F | Hold TV / Control Center |
-| P | Play/pause |
+| V or P | Play/pause |
 | K | Open text keyboard |
 | H | Hide window |
 
-Arrow keys, Escape/Backspace for Back, T for TV, and +/- for volume still work. Hold Option/Alt to reveal shortcuts on the remote. Shortcuts only operate while the remote window has focus and do not intercept typing in fields or native control activation. The old triple-Q quit shortcut has been removed.
+Arrow keys, Escape/Backspace for Back, T for TV, and +/- for volume still work. Hover over any remote button to see its keyboard shortcut, or hold Option/Alt to reveal shortcuts on the remote. Shortcuts only operate while the remote window has focus and do not intercept typing in fields or native control activation. The old triple-Q quit shortcut has been removed.
 
 Click a button to send a command; hold TV to open Control Center. The remote's keyboard button opens the separate text-entry window.
 

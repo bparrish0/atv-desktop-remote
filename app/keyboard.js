@@ -5,7 +5,7 @@ const keymap = Object.freeze({
     Space: 'select', Enter: 'select',
     q: 'volume_down', e: 'volume_up', r: 'menu', f: 'home',
     t: 'home', l: 'home_hold', Backspace: 'menu', Escape: 'menu',
-    p: 'play_pause', Pause: 'play_pause',
+    v: 'play_pause', p: 'play_pause', Pause: 'play_pause',
     Previous: 'skip_backward', Next: 'skip_forward',
     '[': 'skip_backward', ']': 'skip_forward', g: 'top_menu',
     '+': 'volume_up', '=': 'volume_up', '-': 'volume_down', '_': 'volume_down'

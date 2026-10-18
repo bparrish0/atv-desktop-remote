@@ -2,7 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { keymap, normalizeKey, isTypingTarget } = require('../app/keyboard');
 test('requested controls and Shift/caps variants dispatch the correct remote commands', () => {
-    for (const [key, command] of Object.entries({ w:'up', a:'left', s:'down', d:'right', ' ':'select', q:'volume_down', e:'volume_up', r:'menu', f:'home' })) {
+    for (const [key, command] of Object.entries({ w:'up', a:'left', s:'down', d:'right', ' ':'select', q:'volume_down', e:'volume_up', r:'menu', f:'home', v:'play_pause' })) {
         assert.equal(keymap[normalizeKey(key)], command);
         assert.equal(keymap[normalizeKey(key.toUpperCase())], command);
     }
