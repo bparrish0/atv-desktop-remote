@@ -85,6 +85,8 @@ function setupIPC() {
         };
     }
 
+    ipcRenderer.on('focusRemote', () => views.focusControls());
+
     ipcRenderer.on('shortcutWin', () => {
         handleDarkMode();
         views.toggleAltText(true);

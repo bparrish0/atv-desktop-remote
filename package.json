@@ -26,7 +26,8 @@
         "build:win": "npx electron-builder -w",
         "build-arm": "npx electron-builder -m --arm64",
         "test": "node --test test/*.test.js",
-        "test:ui": "electron scripts/ui-smoke.cjs"
+        "test:ui": "electron scripts/ui-smoke.cjs",
+        "test:focus": "electron scripts/focus-smoke.cjs"
     },
     "devDependencies": {
         "electron": "^41.1.0",

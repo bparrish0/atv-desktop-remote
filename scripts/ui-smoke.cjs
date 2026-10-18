@@ -34,6 +34,16 @@ app.whenReady().then(async () => {
         for (const key of ['w', 'a', 's', 'd', ' ', 'q', 'e', 'r', 'f', 'v', 'V', 'p']) press(key);
         assert.deepEqual(sent.map(x => x.key), ['up','left','down','right','select','volume_down','volume_up','menu','home','play_pause','play_pause','play_pause']);
         sent.length = 0;
+        // Reopening must leave a remote surface ready, even after a native button
+        // (such as Quit) or the device dropdown held focus on the previous open.
+        for (const selector of ['#exitLink', '[data-key="select"]', '#remoteDropdown']) {
+            document.querySelector(selector).focus();
+            handlers.focusRemote();
+            assert.equal(document.activeElement, document.querySelector('.siri-remote'));
+            press('w', {}, document.activeElement);
+        }
+        assert.deepEqual(sent.map(x => x.key), ['up', 'up', 'up']);
+        sent.length = 0;
         press('F', {shiftKey: true}); press('W', {shiftKey: true});
         assert.deepEqual(sent, [{key:'home',action:'Hold'}, {key:'up',action:'Hold'}]);
         sent.length = 0;
@@ -67,7 +77,7 @@ app.whenReady().then(async () => {
         assert.ok(bounds.left >= 0 && bounds.right <= innerWidth);
         assert.ok(document.querySelector('footer').getBoundingClientRect().bottom <= innerHeight);
         await new Promise(r => setTimeout(r, 1200));
-        return { checks: 'keyboard dispatch, Q repeat, typing/modifier guards, 10 mouse buttons, native activation, TV long press, Alt hints, window bounds', width: innerWidth, height: innerHeight };
+        return { checks: 'reopen focus from Quit/remote button/dropdown, keyboard dispatch, Q repeat, typing/modifier guards, 10 mouse buttons, native activation, TV long press, Alt hints, window bounds', width: innerWidth, height: innerHeight };
     })()`);
     console.log(JSON.stringify(results));
     await new Promise(r => setTimeout(r, 150));
@@ -75,7 +85,7 @@ app.whenReady().then(async () => {
     await win.webContents.executeJavaScript(`document.body.classList.add('darkMode'); document.querySelector('#s2style-sheet').href='css/select2-inverted.css'`);
     await new Promise(r => setTimeout(r, 150));
     fs.writeFileSync(path.join(output, 'remote-dark.png'), (await win.webContents.capturePage()).toPNG());
-    await win.webContents.executeJavaScript(`require('./views').showView(require('./state').States.PAIRING_1); const input = document.querySelector('#pairCode'); if (getComputedStyle(input).display === 'none' || input.getBoundingClientRect().right > innerWidth) throw new Error('Pairing input is hidden or clipped');`);
+    await win.webContents.executeJavaScript(`const views = require('./views'); views.showView(require('./state').States.PAIRING_1); const input = document.querySelector('#pairCode'); input.value = '1234'; document.querySelector('#exitLink').focus(); views.focusControls(); if (document.activeElement !== input || input.value !== '1234') throw new Error('Pairing focus or code lost'); if (getComputedStyle(input).display === 'none' || input.getBoundingClientRect().right > innerWidth) throw new Error('Pairing input is hidden or clipped');`);
     fs.writeFileSync(path.join(output, 'pairing-dark.png'), (await win.webContents.capturePage()).toPNG());
     clearTimeout(watchdog);
     app.quit();

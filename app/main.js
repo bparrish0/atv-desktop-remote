@@ -1,4 +1,4 @@
-const { app, BrowserWindow, powerMonitor, Tray, Menu, nativeImage, globalShortcut, webContents } = require('electron')
+const { app, BrowserWindow, powerMonitor, Tray, Menu, nativeImage, globalShortcut, webContents, dialog } = require('electron')
 var win;
 const { ipcMain } = require('electron')
 const path = require('path');
@@ -9,6 +9,7 @@ var secondWindow;
 process.env['MYPATH'] = path.join(process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME + "/.local/share"), "ATV Remote");
 const lodash = _ = require('./js/lodash.min');
 const fs = require('fs');
+const { registerShowShortcuts } = require('./hotkeys');
 
 // No longer using Python server - atvjs communicates directly
 
@@ -135,7 +136,7 @@ function createHotkeyWindow() {
         }
     });
     require("@electron/remote/main").enable(hotkeyWindow.webContents);
-    hotkeyWindow.loadFile('hotkey.html');
+    hotkeyWindow.loadFile(path.join(__dirname, 'hotkey.html'));
     hotkeyWindow.setMenu(null);
     hotkeyWindow.on('close', (event) => {
         event.preventDefault();
@@ -158,7 +159,7 @@ function createInputWindow() {
         maximizable: false
     });
     require("@electron/remote/main").enable(secondWindow.webContents);
-    secondWindow.loadFile('input.html');
+    secondWindow.loadFile(path.join(__dirname, 'input.html'));
     secondWindow.on('close', (event) => {
         event.preventDefault();
         secondWindow.webContents.send('closeInputWindow');
@@ -174,6 +175,7 @@ function createInputWindow() {
 
 function createWindow() {
     mb = menubar({
+        dir: __dirname,
         preloadWindow: preloadWindow,
         showDockIcon: false,
         browserWindow: {
@@ -207,6 +209,11 @@ function createWindow() {
             win.webContents.send('windowShow');
             if (handleVolumeButtonsGlobal) handleVolume();
         })
+
+        // Menubar tray clicks call mb.showWindow() directly, bypassing showWindow().
+        // Restore both native and renderer focus for every way the panel opens.
+        mb.on('after-show', focusRemoteWindow);
+        win.webContents.on('did-finish-load', focusRemoteWindow);
 
         win.on('hide', () => {
             win.webContents.send('windowHide');
@@ -290,18 +297,21 @@ function createWindow() {
     })
 }
 
-function showWindow() {
-    secondWindow.hide();
-    try {
+function focusRemoteWindow() {
+    if (!mb?.window || mb.window.isDestroyed() || !mb.window.isVisible()) return;
+    if (process.platform === 'darwin') {
         app.show();
-    } catch (err) {
-        //console.log(err);
-        // this happens in windows, doesn't seem to affect anything though
+        app.focus({ steal: true });
     }
-    mb.showWindow();
-    setTimeout(() => {
-        mb.window.focus();
-    }, 200);
+    mb.window.focus();
+    mb.window.webContents.focus();
+    mb.window.webContents.send('focusRemote');
+}
+
+async function showWindow() {
+    secondWindow?.hide();
+    // after-show also restores focus when the panel is already visible.
+    await mb.showWindow();
 }
 
 var showWindowThrottle = lodash.throttle(showWindow, 100);
@@ -347,64 +357,30 @@ function handleVolume() {
         })
     })
 }
-function registerHotkeys() {
-    var hotkeyPath = path.join(process.env['MYPATH'], "hotkey.txt")
-    try {
-        globalShortcut.unregisterAll();
-    } catch (err) {
-        console.log(`Error unregistering hotkeys: ${err}`)
-    } 
-    var registered = false;   
-    if (fs.existsSync(hotkeyPath)) {
-        
-        var hotkeys = fs.readFileSync(hotkeyPath, {encoding: 'utf-8'}).trim();
-        if (hotkeys.indexOf(",") > -1) {
-            hotkeys = hotkeys.split(',').map(el => { return el.trim() });
-        } else {
-            hotkeys = [hotkeys];
-        }
-        console.log(`Registering custom hotkeys: ${hotkeys}`)
-        var errs = hotkeys.map(hotkey => {
-            console.log(`Registering hotkey: ${hotkey}`)
-            return globalShortcut.register(hotkey, () => {
-                if (mb.window.isVisible()) {
-                    hideWindow();
-                } else {
-                    showWindow();
-                }
-                win.webContents.send('shortcutWin');
-            })
-        })
-        // var ret = globalShortcut.registerAll(hotkeys, () => {
-        //     if (mb.window.isVisible()) {
-        //         hideWindow();
-        //     } else {
-        //         showWindow();
-        //     }
-        //     win.webContents.send('shortcutWin');
-        // })
-        var ret = errs.every(el => { return el });
-        if (!ret) {
-            errs.forEach((err, idx) => {
-                if (!err) {
-                    console.log(`Error registering hotkey: ${hotkeys[idx]}`)
-                }
-            })
-            console.log(`Error registering hotkeys: ${hotkeys}`)
-        } else {
-            registered =true;
-        }
-    } 
-    if (!registered) {
-        globalShortcut.registerAll(['Super+Shift+R', 'Command+Control+R'], () => {
-            if (mb.window.isVisible()) {
-                hideWindow();
-            } else {
-                showWindow();
-            }
-            win.webContents.send('shortcutWin');
-        })
+function toggleRemoteWindow() {
+    if (mb?.window?.isVisible() && mb.window.isFocused()) {
+        hideWindow();
+    } else {
+        showWindow().catch(console.error);
     }
+}
+
+function registerHotkeys() {
+    const hotkeyPath = path.join(process.env['MYPATH'], 'hotkey.txt');
+    const custom = fs.existsSync(hotkeyPath) ? fs.readFileSync(hotkeyPath, 'utf8') : '';
+    globalShortcut.unregisterAll();
+    const result = registerShowShortcuts(globalShortcut, custom, toggleRemoteWindow);
+    result.failed.forEach(key => console.log(`Could not register global shortcut: ${key}`));
+    console.log(`Global shortcuts: ${result.registered.join(', ') || 'none'}`);
+    if (result.failed.length) {
+        dialog.showMessageBox({
+            type: 'warning',
+            message: 'Some global shortcuts could not be registered.',
+            detail: `Unavailable or invalid: ${result.failed.join(', ')}.\n` +
+                (result.registered.length ? `Use ${result.registered.join(' or ')} instead.` : 'Open the remote from the menu bar and choose Change hotkey.')
+        }).catch(console.error);
+    }
+    if (handleVolumeButtonsGlobal && mb?.window?.isVisible()) handleVolume();
 }
 
 app.whenReady().then(() => {
@@ -425,7 +401,7 @@ app.whenReady().then(() => {
 })
 
 app.on("before-quit", () => {
-    // No cleanup needed - atvjs connections close automatically
+    globalShortcut.unregisterAll();
 })
 
 app.on('window-all-closed', () => {

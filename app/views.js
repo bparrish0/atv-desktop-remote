@@ -67,6 +67,15 @@ function showView(state, data = {}) {
     }
 }
 
+/** Focus the remote surface, keeping pairing fields ready for normal typing. */
+function focusControls() {
+    if (currentView === States.PAIRING_1 || currentView === States.PAIRING_2) {
+        document.querySelector('#pairCode').focus({ preventScroll: true });
+    } else if (currentView === States.CONNECTED || currentView === States.CONNECTING) {
+        document.querySelector('.siri-remote').focus({ preventScroll: true });
+    }
+}
+
 /**
  * Show initialization view (loading spinner)
  */
@@ -394,6 +403,7 @@ function getLoader() {
 
 module.exports = {
     init,
+    focusControls,
     showView,
     createDevicePicker,
     setStatus,

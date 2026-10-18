@@ -30,6 +30,8 @@ This fork uses a silver Siri Remote layout with a circular clickpad, Back and TV
 
 Arrow keys, Escape/Backspace for Back, T for TV, and +/- for volume still work. Hover over any remote button to see its keyboard shortcut, or hold Option/Alt to reveal shortcuts on the remote. Shortcuts only operate while the remote window has focus and do not intercept typing in fields or native control activation. The old triple-Q quit shortcut has been removed.
 
+Click the menu-bar icon or press **Command + Shift + Space** on Mac (**Control + Shift + Space** elsewhere) to open and focus the remote immediately. Press the shortcut again while the remote is focused to hide it. The previous Command + Shift + R and Command + Control + R shortcuts remain available by default. Right-click the tray icon and choose **Change hotkey** to override the defaults; conflicts or invalid shortcuts are reported, with working alternatives listed. This uses Electron global shortcuts and needs no Accessibility permission or Caps Lock remapping.
+
 Click a button to send a command; hold TV to open Control Center. The remote's keyboard button opens the separate text-entry window.
 
 ## Registered devices and upgrades
@@ -72,13 +74,13 @@ For a full-profile backup, quit the app and copy the entire user-data directory.
  2. Run `npm start`
  3. The application runs in the menubar. Look for a tiny remote icon and click on it. Right-click for more options.
  4. The first time the app runs it will need to pair with an Apple TV. You can pair with more than one.
- 5. Press `Cmd+Shift+R` to open the application from anywhere. On Windows its `Win+Shift+R`
+ 5. Press `Cmd+Shift+Space` to open and focus the application from anywhere. On Windows/Linux use `Ctrl+Shift+Space`.
 
 ## Building
 
 1. `electron-builder` is used to create a standalone application.
 2. Run `npm run build-arm` for Apple silicon, `npm run build` for the host Mac architecture, or `npm run build:win` for Windows. Distributable builds need appropriate signing/notarization credentials.
-3. Run `npm test` for keyboard and device-transfer tests. `npm run test:ui` runs an offscreen Electron smoke test with a temporary profile, mock devices, and no Apple TV network traffic.
+3. Run `npm test` for keyboard and device-transfer tests. `npm run test:ui` runs an offscreen Electron smoke test with a temporary profile, mock devices, and no Apple TV network traffic. `npm run test:focus` exercises the actual menubar click handler, native keyboard dispatch, shortcut callbacks, pinned-window activation, and pairing focus using a temporary profile and mocked Apple TV I/O; it requires an unlocked desktop session.
 
 ## Notes
 
