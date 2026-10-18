@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval';">
-<html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ATV Remote</title>
     <link rel="stylesheet" href="css/loaders.css">
-    <link rel="stylesheet" href="css/main.css">
+
     <link rel="stylesheet" href="css/pure-min.css">
     <link rel="stylesheet" href="css/all.css">
     <link rel="stylesheet" id="s2style-sheet" href="css/select2-inverted.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/remote.css">
     <script>
         window.jQuery = window.$ = require('jquery');
         require('./js/select2.min.js')($)
@@ -19,6 +21,7 @@
     <script src="js/loader.js"></script>
 
 
+</head>
     <body>
         <div class="pure-g">
             <div class="pure-u-1-2">
@@ -28,7 +31,7 @@
             </div>
             <div class="pure-u-1-2">
                 <div id="exitLinkWrapper">
-                    <button id="exitLink" class="simpleButton"><span class="keyText">Quit</span><span class="keyTextAlt">Q (3x)</span></button>
+                    <button id="exitLink" class="simpleButton"><span class="keyText">Quit</span><span class="keyTextAlt">Quit</span></button>
                 </div>
             </div>
         </div>
@@ -73,75 +76,33 @@
             </div>
             <div id="runningElements">
 
-                <div id="keyMapElement"></div>
-                <div class="pure-g">
-                    <div class="pure-u-1 pure-u-md-1-4"></div>
-                    <div class="pure-u-1 pure-u-md-1-2">
-                        <table class="directionTable">
-                            <tr>
-                                <td>
-                                    <div data-key="volume_down" data-tippy-content="Lower Volume" class=" directionCircle volumeKeys"><span class='keyText'><i class="fas fa-volume-down"></i></span><span class='keyTextAlt'>-, _</span></div>
-                                </td>
-                                <td>
-                                    <div data-key="up" data-tippy-content="Up arrow" class="directionArrows directionCircle"><span class='keyText'><i class="fas fa-arrow-up"></i></span><span class='keyTextAlt'>Up</span></div>
-                                </td>
-                                <td>
-                                    <div data-key="volume_up" data-tippy-content="Raise Volume" class=" directionCircle volumeKeys"><span class='keyText'><i class="fas fa-volume-up"></i></span><span class='keyTextAlt'>+, =</span></div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div data-key="left" class="directionArrows directionCircle"><span class='keyText'><i class="fas fa-arrow-left"></i></span><span class='keyTextAlt'>Left</span></div>
-                                </td>
-                                <td>
-                                    <div data-key="select" class="selectArrow directionArrows directionCircle"><span class='keyText'>Select</span><span class='keyTextAlt'>Enter</span></div>
-                                </td>
-                                <td>
-                                    <div data-key="right" class="directionArrows directionCircle"><span class='keyText'><i class="fas fa-arrow-right"></i></span><span class='keyTextAlt'>Right</span></div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div data-key="skip_backward" class="directionCircle"><span class='keyText'>Prev</span><span class='keyTextAlt'>P, [</span></div>
-                                </td>
-                                <td>
-                                    <div data-key="down" class="directionArrows directionCircle"><span class='keyText'><i class="fas fa-arrow-down"></i></span><span class='keyTextAlt'>Down</span></div>
-                                </td>
-                                <td>
-                                    <div data-key="skip_forward" class="directionCircle"><span class='keyText'>Next</span><span class='keyTextAlt'>N, ]</span></div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-
-                                </td>
-                                <td>
-
-                                </td>
-                                <td>
-
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="directionCircle" data-key="play_pause"><span class='keyText'>Play</span><span class='keyTextAlt'>Space</span></div>
-                                </td>
-                                <td>
-                                    <div class="directionCircle menuButton" data-key="menu"><span class='keyText'>Menu</span><span class='keyTextAlt'>Esc, <i class="fas fa-backspace"></i></span></div>
-                                </td>
-                                <td>
-                                    <div class="directionCircle" data-key="home"><span class='keyText'>TV</span><span class='keyTextAlt'>T, L</span></div>
-                                </td>
-                            </tr>
-                        </table>
-
+                <div class="siri-remote" aria-label="Apple TV remote">
+                    <div class="remote-brand" aria-hidden="true"><i class="fab fa-apple"></i> tv</div>
+                    <div class="clickpad" role="group" aria-label="Navigation">
+                        <button type="button" data-key="up" aria-label="Up (W)" class="remote-key pad-up"><span class="keyText"><i class="fas fa-chevron-up" aria-hidden="true"></i></span><span class="keyTextAlt">W</span></button>
+                        <button type="button" data-key="left" aria-label="Left (A)" class="remote-key pad-left"><span class="keyText"><i class="fas fa-chevron-left" aria-hidden="true"></i></span><span class="keyTextAlt">A</span></button>
+                        <button type="button" data-key="select" aria-label="Select (Space)" class="remote-key pad-select"><span class="keyText select-dot"></span><span class="keyTextAlt">Space</span></button>
+                        <button type="button" data-key="right" aria-label="Right (D)" class="remote-key pad-right"><span class="keyText"><i class="fas fa-chevron-right" aria-hidden="true"></i></span><span class="keyTextAlt">D</span></button>
+                        <button type="button" data-key="down" aria-label="Down (S)" class="remote-key pad-down"><span class="keyText"><i class="fas fa-chevron-down" aria-hidden="true"></i></span><span class="keyTextAlt">S</span></button>
                     </div>
-                    <div class="pure-u-1 pure-u-md-1-4"></div>
-
-                    <div class="pure-u-1-12"></div>
-                    <div class="pure-u-5-6"></div>
-                    <div class="pure-u-1-12"></div>
+                    <div class="remote-controls">
+                        <button type="button" data-key="menu" aria-label="Back (R)" class="remote-key back-key"><span class="keyText"><i class="fas fa-chevron-left" aria-hidden="true"></i></span><span class="keyTextAlt">R</span></button>
+                        <button type="button" data-key="home" aria-label="TV (F); hold for Control Center" class="remote-key"><span class="keyText"><i class="fas fa-tv" aria-hidden="true"></i></span><span class="keyTextAlt">F</span></button>
+                        <button type="button" data-key="play_pause" aria-label="Play or pause (P)" class="remote-key play-key"><span class="keyText"><i class="fas fa-play" aria-hidden="true"></i><i class="fas fa-pause" aria-hidden="true"></i></span><span class="keyTextAlt">P</span></button>
+                        <div class="volume-rocker" role="group" aria-label="Volume">
+                            <button type="button" data-key="volume_up" aria-label="Volume up (E)" class="remote-key"><span class="keyText">+</span><span class="keyTextAlt">E</span></button>
+                            <span class="volume-symbol" aria-hidden="true"><i class="fas fa-volume-up"></i></span>
+                            <button type="button" data-key="volume_down" aria-label="Volume down (Q)" class="remote-key"><span class="keyText">−</span><span class="keyTextAlt">Q</span></button>
+                        </div>
+                        <button type="button" onclick="openKeyboardClick(event)" aria-label="Open keyboard (K)" class="remote-key keyboard-key"><span class="keyText"><i class="fas fa-keyboard" aria-hidden="true"></i></span><span class="keyTextAlt">K</span></button>
+                    </div>
+                    <div class="remote-seam" aria-hidden="true"></div>
                 </div>
+                <details class="shortcut-help">
+                    <summary>Keyboard controls</summary>
+                    <p>W A S D · Navigate<br>Space · Select<br>Q / E · Volume − / +<br>R · Back &nbsp; F · TV &nbsp; P · Play/pause<br>Shift + F · Control Center<br>K · Keyboard &nbsp; H · Hide</p>
+                    <p>Arrow keys and Enter also work.<br>Hold Option / Alt to reveal shortcuts.</p>
+                </details>
 
             </div>
 

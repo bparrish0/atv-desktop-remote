@@ -24,7 +24,9 @@
         "build": "npx electron-builder -m",
         "docker-build": "./electron_docker.sh 'npm run build:win'",
         "build:win": "npx electron-builder -w",
-        "build-arm": "npx electron-builder -m --arm64"
+        "build-arm": "npx electron-builder -m --arm64",
+        "test": "node --test test/*.test.js",
+        "test:ui": "electron scripts/ui-smoke.cjs"
     },
     "devDependencies": {
         "electron": "^41.1.0",

@@ -177,8 +177,8 @@ function createWindow() {
         preloadWindow: preloadWindow,
         showDockIcon: false,
         browserWindow: {
-            width: 300,
-            height: 500,
+            width: 340,
+            height: 690,
             alwaysOnTop: false,
             webPreferences: {
                 nodeIntegration: true,

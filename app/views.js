@@ -169,7 +169,7 @@ function createDevicePicker(devices) {
  * Setup the remote control buttons with click and long-press handlers
  */
 function setupRemoteButtons() {
-    $('.directionTable').fadeIn();
+    $('.siri-remote').show();
     $('#topTextKBLink').show();
 
     // Clear previous handlers and state
@@ -177,9 +177,15 @@ function setupRemoteButtons() {
     longPressProgress = {};
     isLongPressing = {};
 
-    $('[data-key]').off('mousedown mouseup mouseleave');
+    $('[data-key]').off('mousedown mouseup mouseleave click');
+    // Native keyboard activation and assistive technology generate a click.
+    $('[data-key]').on('click', function(e) {
+        if (e.detail === 0) window.sendCommand($(this).data('key'));
+    });
 
     $('[data-key]').on('mousedown', function(e) {
+        if (e.button !== 0) return;
+        e.preventDefault();
         const key = $(this).data('key');
         const $button = $(this);
 
@@ -302,8 +308,7 @@ function setupDeviceDropdown() {
 
     options.unshift({ id: 'addnew', text: 'Pair another remote' });
 
-    let html = `<span class='ctText'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>`;
-    html += `<select id="remoteDropdown"></select>`;
+    let html = `<label class="device-label" for="remoteDropdown">APPLE TV</label><select id="remoteDropdown" aria-label="Apple TV device"></select>`;
     $('#atvDropdownContainer').html(html);
 
     $('#remoteDropdown').select2({
