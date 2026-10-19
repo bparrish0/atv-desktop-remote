@@ -1,23 +1,73 @@
 # ATV Desktop Remote
 A simple menubar app that allows you to control an Apple TV from your desktop
 
- ![What this application looks like when running in either light or dark mode](screenshot_new.png)
+<img src="screenshots/remote-light.png" alt="Silver Siri Remote interface" width="260">
 
 
 
 ## Installation 
 
-If you have homebrew installed `brew install atv-remote`
+Build this fork from source using the instructions below. Homebrew (`brew install atv-remote`) and [upstream releases](https://github.com/bsharper/atv-desktop-remote/releases) install the original app.
 
-macOS and Windows versions can be downloaded from here: https://github.com/bsharper/atv-desktop-remote/releases
 
+## This fork
+
+This fork uses a silver Siri Remote layout with a circular clickpad, Back and TV buttons, play/pause, a volume rocker, and a keyboard button. The keyboard button takes the place of the physical remote's mute button; the current Apple TV library does not expose mute or power commands.
 
 ## Usage
 
- 1. Keys are mapped to the keyboard when the application is open (pressing return or enter on the keyboard for select, delete for Menu, etc).
- 2. Press `Option`, or `Alt` on Windows, to see what the characters are mapped to when the application is open.
- 3. Long press buttons now works to simulate long presses on the remote
- 
+| Key | Action |
+| --- | --- |
+| W / A / S / D | Up / Left / Down / Right |
+| Space or Enter | Select |
+| Q / E | Volume down / up |
+| R | Back |
+| F | TV |
+| Shift + F | Hold TV / Control Center |
+| V or P | Play/pause |
+| K | Open text keyboard |
+| H | Hide window |
+
+Arrow keys, Escape/Backspace for Back, T for TV, and +/- for volume still work. Hover over any remote button to see its keyboard shortcut, or hold Option/Alt to reveal shortcuts on the remote. Shortcuts only operate while the remote window has focus and do not intercept typing in fields or native control activation. The old triple-Q quit shortcut has been removed.
+
+Click the menu-bar icon or press **Command + Shift + Space** on Mac (**Control + Shift + Space** elsewhere) to open and focus the remote immediately. Press the shortcut again while the remote is focused to hide it. The previous Command + Shift + R and Command + Control + R shortcuts remain available by default. Right-click the tray icon and choose **Change hotkey** to override the defaults; conflicts or invalid shortcuts are reported, with working alternatives listed. This uses Electron global shortcuts and needs no Accessibility permission or Caps Lock remapping.
+
+Click a button to send a command; hold TV to open Control Center. The remote's keyboard button opens the separate text-entry window.
+
+### Customize remote shortcuts
+
+Click the **gear** in the upper-right corner to open **Keyboard shortcuts**. Click an action's shortcut field and press a key (optionally with Shift) to replace its bindings. Use **×** to unassign an action, **Reset** to restore defaults, and **Save** to apply. **Cancel** discards changes, including a pending reset. Duplicate shortcuts are rejected. Each action can be configured, including Control Center, skip, keyboard entry, and hiding the remote.
+
+Settings persist in the app's profile under `remote_shortcuts_v1`; pairings are unchanged. Button hints, tooltips, accessible labels, and the keyboard-help list update when you save. Shortcuts pause while settings are open, and Shift continues to hold a remote button. Command, Control, Option/Alt, Tab, and Caps Lock are reserved. The global show/hide shortcut is configured separately through **Change hotkey** in the tray menu.
+
+## Registered devices and upgrades
+
+Pairings live in Chromium `localStorage` in the Electron user-data profile, outside the application bundle:
+
+- `remote_credentials`: saved devices and pairing credentials, indexed by display name.
+- `atvcreds`: the currently selected device's credentials.
+
+The normal profile locations are:
+
+- macOS: `~/Library/Application Support/ATV Remote/`
+- Windows: `%APPDATA%\ATV Remote\`
+- Linux: `$XDG_CONFIG_HOME/ATV Remote/` (normally `~/.config/ATV Remote/`)
+
+The local-storage database is under `Local Storage/leveldb/`. To confirm the exact profile on a particular installation, open the renderer's developer console and run `require('@electron/remote').app.getPath('userData')`. The `MYPATH` directory in `main.js` was used for legacy helper files; it is not what selects Electron's local-storage profile.
+
+This fork preserves the upstream package name (`atv-mac-remote`), product name (`ATV Remote`), bundle ID (`com.electron.atvMacRemote`), page path, and storage keys. Replacing an existing installation for the same OS user should keep its registered devices. Quit the app before replacing it, retain the user-data directory, and avoid **Clear saved data**. A different OS user or a fresh computer has a separate profile.
+
+### Move registrations to another machine
+
+1. Install this fork on the original machine, retaining its existing user-data profile.
+2. Right-click the menu-bar/tray icon and choose **Export paired devices…**.
+3. Transfer the exported JSON privately to the destination machine.
+4. On the destination, choose **Import paired devices…** from the tray menu.
+
+Import merges devices, preserves existing registrations and the current selection, and gives a different device with the same display name an `imported` suffix. It reloads the remote to refresh the device list. Exports include private pairing credentials in plaintext; store them securely and do not commit them to Git. They contain device network addresses, so the destination must be able to reach the Apple TVs. A changed address or revoked pairing may still require reconnection or pairing again.
+
+For a full-profile backup, quit the app and copy the entire user-data directory. Use export/import for moving between machines rather than copying an individual LevelDB file.
+
  <p align="center">
   <img src="buttonpress.gif" alt="long press button animation" width="200"/>
 </p>
@@ -26,15 +76,17 @@ macOS and Windows versions can be downloaded from here: https://github.com/bshar
  
  ## Running
 
- 1. Run `npm i --legacy-peer-deps` (other package manages may also work)
+ 1. Run `npm ci --legacy-peer-deps`, then `npm ci --prefix app --legacy-peer-deps`
  2. Run `npm start`
  3. The application runs in the menubar. Look for a tiny remote icon and click on it. Right-click for more options.
  4. The first time the app runs it will need to pair with an Apple TV. You can pair with more than one.
- 5. Press `Cmd+Shift+R` to open the application from anywhere. On Windows its `Win+Shift+R`
+ 5. Press `Cmd+Shift+Space` to open and focus the application from anywhere. On Windows/Linux use `Ctrl+Shift+Space`.
 
 ## Building
 
 1. `electron-builder` is used to create a standalone application.
+2. Run `npm run build-arm` for Apple silicon, `npm run build` for the host Mac architecture, or `npm run build:win` for Windows. Distributable builds need appropriate signing/notarization credentials.
+3. Run `npm test` for keyboard and device-transfer tests. `npm run test:ui` runs an offscreen Electron smoke test with a temporary profile, mock devices, and no Apple TV network traffic. `npm run test:focus` exercises the actual menubar click handler, native keyboard dispatch, shortcut callbacks, pinned-window activation, and pairing focus using a temporary profile and mocked Apple TV I/O; it requires an unlocked desktop session.
 
 ## Notes
 

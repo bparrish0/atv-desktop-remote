@@ -74,7 +74,7 @@
 
                 Hotkeys will be registered when this window is closed. For more infromation about hotkeys/accelerators, go to 
                 <a href="https://www.electronjs.org/docs/latest/api/accelerator" id="accellink">https://www.electronjs.org/docs/latest/api/accelerator</a><br>
-                The default value is Super+Shift+R
+                The default is Command + Shift + Space on Mac (Control + Shift + Space elsewhere).<br>Super + Shift + R and Command + Control + R are also available by default.
             </div>
             </div>
     </div>
@@ -140,9 +140,10 @@
         function saveHotkey() {
             var hotkeys = $('#all_hotkeys').val() || [];
             if (hotkeys.length === 0) {
-                fs.unlinkSync(hotkeyPath);
+                if (fs.existsSync(hotkeyPath)) fs.unlinkSync(hotkeyPath);
             } else {
                 
+                fs.mkdirSync(MYPATH, { recursive: true });
                 fs.writeFileSync(hotkeyPath, hotkeys.join(','));
             }
             closeWindow();
@@ -188,6 +189,8 @@
                 $('#hotkeys').append(option);
             });
 
+            $('#hotkeys').append(createOption('Space', 'Space', false));
+
             // Add uppercase letters A-Z
             for (var i = 65; i <= 90; i++) {
                 var letter = String.fromCharCode(i);
@@ -228,7 +231,7 @@
             });
             
             if (!loadExistingHotkey()) {
-                $("#hotkeys").val(hotkeysFromParsed("Super+Shift+R")).trigger("change");
+                $("#hotkeys").val(hotkeysFromParsed("CommandOrControl+Shift+Space")).trigger("change");
             }
             $("#accellink").click(function() {
                 require('electron').shell.openExternal(this.href);

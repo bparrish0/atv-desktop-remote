@@ -12,29 +12,11 @@ let nativeTheme;
 let remote;
 let Menu;
 let mb;
+const originalConsoleLog = console.log;
 
-// Key mappings
-const keymap = {
-    'ArrowUp': 'up',
-    'ArrowDown': 'down',
-    'ArrowLeft': 'left',
-    'ArrowRight': 'right',
-    't': 'home',
-    'l': 'home_hold',
-    'Backspace': 'menu',
-    'Escape': 'menu',
-    'Space': 'play_pause',
-    'Enter': 'select',
-    'Previous': 'skip_backward',
-    'Next': 'skip_forward',
-    '[': 'skip_backward',
-    ']': 'skip_forward',
-    'g': 'top_menu',
-    '+': 'volume_up',
-    '=': 'volume_up',
-    '-': 'volume_down',
-    '_': 'volume_down'
-};
+const keyboard = require('./keyboard');
+const shortcutSettings = require('./shortcut-settings');
+const { isTypingTarget } = keyboard;
 
 const keyDescriptions = {
     'volume_down': 'Lower Volume',
@@ -44,7 +26,6 @@ const keyDescriptions = {
     'home_hold': 'TV long press'
 };
 
-let qPresses = 0;
 let autoKeyboardInterval = null;
 let autoKeyboardPrimed = false;
 let autoKeyboardWasVisible = false;
@@ -82,6 +63,8 @@ function init(options = {}) {
     mb = options.mb;
 
     setupIPC();
+    shortcutSettings.init(() => views.refreshShortcutHints());
+    views.refreshShortcutHints();
     setupKeyboard();
     setupWindowEvents();
     setupDeviceEvents();
@@ -106,6 +89,8 @@ function setupIPC() {
         };
     }
 
+    ipcRenderer.on('focusRemote', () => views.focusControls());
+
     ipcRenderer.on('shortcutWin', () => {
         handleDarkMode();
         views.toggleAltText(true);
@@ -117,7 +102,7 @@ function setupIPC() {
 
     // Use original console.log to avoid re-forwarding main's own logs back to it
     ipcRenderer.on('mainLog', (event, txt) => {
-        _origConsoleLog('[ main ] %s', txt.substring(0, txt.length - 1));
+        originalConsoleLog('[ main ] %s', txt.substring(0, txt.length - 1));
     });
 
     ipcRenderer.on('powerResume', () => {
@@ -175,60 +160,23 @@ function setupKeyboard() {
     });
 
     window.addEventListener('keydown', (e) => {
-        let key = e.key;
-        if (key === ' ') key = 'Space';
-
-        const mods = ['Control', 'Shift', 'Alt', 'Option', 'Fn', 'Hyper', 'OS', 'Super', 'Meta', 'Win']
-            .filter(mod => e.getModifierState(mod));
-
-        if (mods.length > 0 && mods[0] === 'Alt') {
-            views.toggleAltText(false);
-        }
-
-        let shifted = false;
-        if (mods.length === 1 && mods[0] === 'Shift') {
-            shifted = true;
-        } else if (mods.length > 0) {
-            return; // Don't handle keys with other modifiers
-        }
-
-        // Quit on triple-q
-        if (key === 'q') {
-            qPresses++;
-            if (qPresses === 3) ipcRenderer.invoke('quit');
-        } else {
-            qPresses = 0;
-        }
-
-        // Hide window on h
-        if (key === 'h') {
+        if (shortcutSettings.isOpen() || e.isComposing || isTypingTarget(e.target)) return;
+        if (e.key === 'Alt') views.toggleAltText(false);
+        const match = keyboard.resolve(e, shortcutSettings.getBindings());
+        if (!match) return;
+        if (match.action === 'hide') {
+            e.preventDefault();
             ipcRenderer.invoke('hideWindow');
             return;
         }
-
-        // Open keyboard on k
-        if (key === 'k') {
+        if (match.action === 'keyboard') {
+            e.preventDefault();
             openKeyboard();
             return;
         }
-
-        // Handle pairing PIN entry
-        if (!device.isConnected()) {
-            if ($('#pairCode').is(':focus') && key === 'Enter') {
-                submitPairingCode();
-            }
-            return;
-        }
-
-        // Don't send commands if pairing UI is visible
-        if ($('#cancelPairing').is(':visible')) return;
-
-        // Send mapped key command
-        const mappedKey = keymap[key];
-        if (mappedKey) {
-            sendCommand(key, shifted);
-            e.preventDefault();
-        }
+        if (!device.isConnected() || $('#cancelPairing').is(':visible')) return;
+        sendCommand(match.command, match.hold);
+        e.preventDefault();
     });
 }
 
@@ -310,10 +258,7 @@ async function sendCommand(key, shifted = false) {
     appState.updateActivity();
     ipcRenderer.invoke('flashTrayIcon').catch(() => {});
 
-    if (key === 'Pause') key = 'Space';
-
-    let cmd = keymap[key];
-    if (Object.values(keymap).includes(key)) cmd = key;
+    const cmd = key;
 
     // Visual feedback
     let displayKey = cmd;
@@ -360,7 +305,7 @@ function startAutoKeyboardPoll(prime = true) {
     autoKeyboardInterval = setInterval(async () => {
         if (pollInFlight) return;
         if (Date.now() < nextPollTime) return;
-        if (localStorage.getItem('autoKeyboard') === 'false') return;
+        if (shortcutSettings.isOpen() || localStorage.getItem('autoKeyboard') === 'false') return;
         if (appState.state !== States.CONNECTED) return;
 
         pollInFlight = true;
@@ -410,7 +355,7 @@ function startAutoKeyboardPoll(prime = true) {
             }
 
             // Open keyboard if primed and keyboard has focus
-            if (autoKeyboardPrimed && focused) {
+            if (autoKeyboardPrimed && focused && !shortcutSettings.isOpen()) {
                 console.log(`${_kb('🪄', 'open')} auto-opening keyboard window`);
                 openKeyboard();
             }
@@ -595,6 +540,9 @@ function setupContextMenu() {
         { label: 'Appearance', submenu: subMenu },
         { label: 'Change hotkey', click: () => ipcRenderer.invoke('loadHotkeyWindow') },
         { type: 'separator' },
+        { label: 'Export paired devices…', click: exportPairedDevices },
+        { label: 'Import paired devices…', click: importPairedDevices },
+        { type: 'separator' },
         { label: 'Clear saved data', click: clearSavedData },
         { type: 'separator' },
         { label: 'Quit', click: () => remote.app.quit() }
@@ -621,6 +569,49 @@ function toggleAlwaysOnTop(event) {
 
 function toggleAutoKeyboard(event) {
     localStorage.setItem('autoKeyboard', String(event.checked));
+}
+
+async function exportPairedDevices() {
+    const fs = require('fs');
+    const backup = require('./device-backup');
+    let tempPath;
+    try {
+        if (!device.getSavedDeviceNames().length) {
+            await remote.dialog.showMessageBox({ type: 'info', message: 'No paired devices to export.' });
+            return;
+        }
+        const text = backup.exportDevices(localStorage);
+        const result = await remote.dialog.showSaveDialog({
+            title: 'Export devices — file contains private pairing credentials',
+            defaultPath: 'ATV-Remote-devices.json',
+            filters: [{ name: 'Device backup', extensions: ['json'] }]
+        });
+        if (result.canceled || !result.filePath) return;
+        tempPath = `${result.filePath}.${require('crypto').randomUUID()}.tmp`;
+        fs.writeFileSync(tempPath, text, { mode: 0o600, flag: 'wx' });
+        fs.renameSync(tempPath, result.filePath);
+    } catch {
+        await remote.dialog.showMessageBox({ type: 'error', message: 'Could not export paired devices.', detail: 'Check that devices are paired and the destination is writable.' });
+    } finally {
+        if (tempPath && fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+    }
+}
+
+async function importPairedDevices() {
+    try {
+        const result = await remote.dialog.showOpenDialog({
+            title: 'Import paired devices', properties: ['openFile'],
+            filters: [{ name: 'Device backup', extensions: ['json'] }]
+        });
+        if (result.canceled || !result.filePaths.length) return;
+        const fs = require('fs');
+        if (fs.statSync(result.filePaths[0]).size > 2 * 1024 * 1024) throw new Error('Backup too large');
+        const added = require('./device-backup').importDevices(localStorage, fs.readFileSync(result.filePaths[0], 'utf8'));
+        await remote.dialog.showMessageBox({ type: 'info', message: `Imported ${added} paired device${added === 1 ? '' : 's'}.`, detail: 'Existing registrations were preserved. The remote will reload to refresh the device list.' });
+        window.location.reload();
+    } catch {
+        await remote.dialog.showMessageBox({ type: 'error', message: 'Could not import paired devices.', detail: 'Choose a valid ATV Remote device export and check that local storage is writable.' });
+    }
 }
 
 async function clearSavedData() {

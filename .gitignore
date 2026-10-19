@@ -14,3 +14,6 @@ old_dist
 build/__pycache__
 REF*.md
 app/atvjs
+
+# Device exports contain private pairing credentials.
+ATV-Remote-devices*.json

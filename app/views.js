@@ -6,6 +6,7 @@
 
 const { States, appState } = require('./state');
 const device = require('./device');
+const keyboard = require('./keyboard');
 
 // View name to DOM element mapping
 const viewElements = {
@@ -65,6 +66,39 @@ function showView(state, data = {}) {
             showConnectedView();
             break;
     }
+}
+
+/** Focus the remote surface, keeping pairing fields ready for normal typing. */
+function focusControls() {
+    if (require('./shortcut-settings').isOpen()) return;
+    if (currentView === States.PAIRING_1 || currentView === States.PAIRING_2) {
+        document.querySelector('#pairCode').focus({ preventScroll: true });
+    } else if (currentView === States.CONNECTED || currentView === States.CONNECTING) {
+        document.querySelector('.siri-remote').focus({ preventScroll: true });
+    }
+}
+
+/** Keep visible hints, accessible names and tooltips aligned with saved bindings. */
+function refreshShortcutHints() {
+    const bindings = require('./shortcut-settings').getBindings() || keyboard.defaults();
+    const labels = id => bindings[id].map(keyboard.formatBinding);
+    for (const action of keyboard.actions) {
+        const button = action.id === 'keyboard' ? document.querySelector('.keyboard-key') : document.querySelector(`[data-key="${action.id}"]`);
+        if (!button) continue;
+        let title = action.label + (bindings[action.id].length ? ` (${labels(action.id).join(' or ')})` : ' (unassigned)');
+        if (action.id === 'home') title += `; Control Center (${labels('home_hold').join(' or ') || 'hold TV'})`;
+        button.title = title;
+        button.setAttribute('aria-label', title);
+        button.querySelector('.keyTextAlt').textContent = (labels(action.id)[0] || '—').replace('Shift + ', '⇧ ').replace('PageDown', 'PgDn').replace('PageUp', 'PgUp');
+    }
+    document.querySelector('#hideShortcutHint').textContent = `${labels('hide')[0] || '—'} - hide window`;
+    const help = document.querySelector('#shortcutHelp');
+    help.replaceChildren();
+    keyboard.actions.forEach(action => {
+        const line = document.createElement('span');
+        line.textContent = `${action.label}: ${labels(action.id).join(' / ') || 'Unassigned'}`;
+        help.append(line, document.createElement('br'));
+    });
 }
 
 /**
@@ -128,6 +162,7 @@ function showConnectedView() {
     $('#statusText').hide();
 
     setupRemoteButtons();
+    refreshShortcutHints();
     setupDeviceDropdown();
     setupKeyboardLink();
 }
@@ -169,7 +204,7 @@ function createDevicePicker(devices) {
  * Setup the remote control buttons with click and long-press handlers
  */
 function setupRemoteButtons() {
-    $('.directionTable').fadeIn();
+    $('.siri-remote').show();
     $('#topTextKBLink').show();
 
     // Clear previous handlers and state
@@ -177,9 +212,15 @@ function setupRemoteButtons() {
     longPressProgress = {};
     isLongPressing = {};
 
-    $('[data-key]').off('mousedown mouseup mouseleave');
+    $('[data-key]').off('mousedown mouseup mouseleave click');
+    // Native keyboard activation and assistive technology generate a click.
+    $('[data-key]').on('click', function(e) {
+        if (e.detail === 0) window.sendCommand($(this).data('key'));
+    });
 
     $('[data-key]').on('mousedown', function(e) {
+        if (e.button !== 0) return;
+        e.preventDefault();
         const key = $(this).data('key');
         const $button = $(this);
 
@@ -302,8 +343,7 @@ function setupDeviceDropdown() {
 
     options.unshift({ id: 'addnew', text: 'Pair another remote' });
 
-    let html = `<span class='ctText'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>`;
-    html += `<select id="remoteDropdown"></select>`;
+    let html = `<label class="device-label" for="remoteDropdown">APPLE TV</label><select id="remoteDropdown" aria-label="Apple TV device"></select>`;
     $('#atvDropdownContainer').html(html);
 
     $('#remoteDropdown').select2({
@@ -389,6 +429,8 @@ function getLoader() {
 
 module.exports = {
     init,
+    focusControls,
+    refreshShortcutHints,
     showView,
     createDevicePicker,
     setStatus,
