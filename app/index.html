@@ -26,11 +26,12 @@
         <div class="pure-g">
             <div class="pure-u-1-2">
                 <div id="alwaysOnTopWrapper">
-                    <span class="keyTextAlt">H - hide window</span>
+                    <span class="keyTextAlt" id="hideShortcutHint">H - hide window</span>
                 </div>
             </div>
             <div class="pure-u-1-2">
                 <div id="exitLinkWrapper">
+                    <button id="settingsButton" type="button" aria-label="Shortcut settings" title="Shortcut settings" aria-haspopup="dialog" aria-controls="shortcutSettings" aria-expanded="false"><i class="fas fa-cog" aria-hidden="true"></i></button>
                     <button id="exitLink" class="simpleButton"><span class="keyText">Quit</span><span class="keyTextAlt">Quit</span></button>
                 </div>
             </div>
@@ -100,8 +101,8 @@
                 </div>
                 <details class="shortcut-help">
                     <summary>Keyboard controls</summary>
-                    <p>W A S D · Navigate<br>Space · Select<br>Q / E · Volume − / +<br>R · Back &nbsp; F · TV &nbsp; V · Play/pause<br>Shift + F · Control Center<br>K · Keyboard &nbsp; H · Hide</p>
-                    <p>Arrow keys and Enter also work.<br>Hold Option / Alt to reveal shortcuts.</p>
+                    <p id="shortcutHelp"></p>
+                    <p>Hold Option / Alt to reveal shortcuts.<br>Use the gear to customize them.</p>
                 </details>
 
             </div>
@@ -118,6 +119,14 @@
                 <div id="atvDropdownContainer"></div>
             </div>
         </footer>
+        <dialog id="shortcutSettings" aria-labelledby="shortcutSettingsTitle" aria-describedby="shortcutSettingsIntro">
+            <div class="settings-header"><div><p class="settings-eyebrow">SETTINGS</p><h1 id="shortcutSettingsTitle">Keyboard shortcuts</h1></div></div>
+            <p id="shortcutSettingsIntro">Click a shortcut, then press a key to replace it. Shift + a key is supported. Use × to unassign.</p>
+            <div id="shortcutRows" class="shortcut-rows"></div>
+            <p class="settings-note">Shortcuts work while the remote is focused. Shift holds a remote button. Change the global opener from the tray’s “Change hotkey” menu.</p>
+            <p id="shortcutMessage" role="status" aria-live="polite"></p>
+            <div class="settings-footer"><button id="resetShortcuts" type="button">Reset</button><div><button id="cancelShortcuts" type="button">Cancel</button><button id="saveShortcuts" type="button" class="primary">Save</button></div></div>
+        </dialog>
     </body>
     <script src="web_remote.js"></script>
 

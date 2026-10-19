@@ -63,3 +63,38 @@ footer { position: static; padding: 0 20px 16px; height: auto; margin-top: auto;
 #pairingElements label { font-size: 15px; line-height: 1.5; }
 #initText { text-align: center; padding: 20px 0; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* Shortcut settings stay inside the menu-bar panel, with a scrolling action list. */
+#exitLinkWrapper { display: flex; justify-content: flex-end; align-items: center; gap: 4px; }
+#settingsButton { background: transparent; color: inherit; border: 0; padding: 5px 7px; margin-top: 2px; cursor: pointer; font-size: 15px; border-radius: 6px; }
+#settingsButton:hover { background: #8882; }
+#settingsButton:focus-visible, #shortcutSettings :focus-visible { outline: 2px solid #1678d3; outline-offset: 2px; }
+#shortcutSettings { width: calc(100% - 24px); max-width: 360px; max-height: calc(100vh - 24px); padding: 18px; border: 1px solid #d2d2d7; border-radius: 17px; background: #fafafa; color: #242426; box-shadow: 0 16px 50px #0005; font-size: 12px; }
+#shortcutSettings[open] { display: flex; flex-direction: column; }
+#shortcutSettings::backdrop { background: #0006; }
+.darkMode #shortcutSettings { background: #252528; color: #f5f5f7; border-color: #48484d; }
+.settings-header { flex-shrink: 0; }
+.settings-eyebrow { margin: 0 0 5px; color: #73737c; font-size: 9px; font-weight: 600; letter-spacing: 1.6px; }
+.darkMode .settings-eyebrow { color: #aaaab3; }
+#shortcutSettings h1 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: -.5px; }
+#shortcutSettingsIntro { line-height: 1.5; color: #666671; margin: 10px 0 14px; flex-shrink: 0; }
+.darkMode #shortcutSettingsIntro, .darkMode .settings-note { color: #b5b5bf; }
+.shortcut-rows { overflow-y: auto; min-height: 80px; padding: 3px; margin: 0 -3px; border-top: 1px solid #8883; border-bottom: 1px solid #8883; }
+.shortcut-row { display: grid; grid-template-columns: 1fr 125px 20px; align-items: center; gap: 6px; min-height: 43px; border-bottom: 1px solid #8882; }
+.shortcut-row:last-child { border: 0; }
+.shortcut-row label { font-size: 11px; font-weight: 500; }
+.shortcut-row input { width: 100%; min-width: 0; padding: 7px 8px; border: 1px solid #ceced5; border-radius: 6px; background: #fff; color: #393940; font-size: 11px; text-overflow: ellipsis; cursor: pointer; }
+.darkMode .shortcut-row input { background: #333337; color: #eeeef3; border-color: #505057; }
+#shortcutSettings button { font: inherit; cursor: pointer; border: 1px solid #bbb; border-radius: 7px; background: transparent; color: inherit; padding: 7px 11px; }
+#shortcutSettings .clear-shortcut { border: 0; font-size: 17px; color: #888; padding: 3px; }
+#shortcutSettings button:hover { background: #8882; }
+.settings-note { font-size: 10px; color: #73737c; line-height: 1.5; margin: 12px 0 0; flex-shrink: 0; }
+#shortcutMessage { min-height: 28px; margin: 8px 0; font-size: 11px; line-height: 1.35; color: #b34323; flex-shrink: 0; }
+.darkMode #shortcutMessage { color: #ffb59d; }
+.settings-footer { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-shrink: 0; }
+.settings-footer > div { display: flex; gap: 6px; }
+#shortcutSettings .primary { background: #1678d3; border-color: #1678d3; color: #fff; }
+#shortcutSettings .primary:hover { background: #1265b1; }
+
+.remote-key .keyTextAlt { max-width: 100%; padding: 2px; overflow-wrap: anywhere; line-height: 1.1; }
+.remote-key .keyTextAlt:not(:empty) { font-size: 12px; }

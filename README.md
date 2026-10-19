@@ -34,6 +34,12 @@ Click the menu-bar icon or press **Command + Shift + Space** on Mac (**Control +
 
 Click a button to send a command; hold TV to open Control Center. The remote's keyboard button opens the separate text-entry window.
 
+### Customize remote shortcuts
+
+Click the **gear** in the upper-right corner to open **Keyboard shortcuts**. Click an action's shortcut field and press a key (optionally with Shift) to replace its bindings. Use **×** to unassign an action, **Reset** to restore defaults, and **Save** to apply. **Cancel** discards changes, including a pending reset. Duplicate shortcuts are rejected. Each action can be configured, including Control Center, skip, keyboard entry, and hiding the remote.
+
+Settings persist in the app's profile under `remote_shortcuts_v1`; pairings are unchanged. Button hints, tooltips, accessible labels, and the keyboard-help list update when you save. Shortcuts pause while settings are open, and Shift continues to hold a remote button. Command, Control, Option/Alt, Tab, and Caps Lock are reserved. The global show/hide shortcut is configured separately through **Change hotkey** in the tray menu.
+
 ## Registered devices and upgrades
 
 Pairings live in Chromium `localStorage` in the Electron user-data profile, outside the application bundle:

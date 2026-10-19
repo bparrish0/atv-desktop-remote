@@ -14,7 +14,9 @@ let Menu;
 let mb;
 const originalConsoleLog = console.log;
 
-const { keymap, normalizeKey, isTypingTarget } = require('./keyboard');
+const keyboard = require('./keyboard');
+const shortcutSettings = require('./shortcut-settings');
+const { isTypingTarget } = keyboard;
 
 const keyDescriptions = {
     'volume_down': 'Lower Volume',
@@ -61,6 +63,8 @@ function init(options = {}) {
     mb = options.mb;
 
     setupIPC();
+    shortcutSettings.init(() => views.refreshShortcutHints());
+    views.refreshShortcutHints();
     setupKeyboard();
     setupWindowEvents();
     setupDeviceEvents();
@@ -156,35 +160,23 @@ function setupKeyboard() {
     });
 
     window.addEventListener('keydown', (e) => {
-        if (e.isComposing || isTypingTarget(e.target)) return;
-        const key = normalizeKey(e.key);
-        if (key === 'Alt') views.toggleAltText(false);
-        if (e.ctrlKey || e.metaKey || e.altKey) return;
-        const shifted = e.shiftKey;
-
-        // Hide window on h
-        if (key === 'h') {
+        if (shortcutSettings.isOpen() || e.isComposing || isTypingTarget(e.target)) return;
+        if (e.key === 'Alt') views.toggleAltText(false);
+        const match = keyboard.resolve(e, shortcutSettings.getBindings());
+        if (!match) return;
+        if (match.action === 'hide') {
+            e.preventDefault();
             ipcRenderer.invoke('hideWindow');
             return;
         }
-
-        // Open keyboard on k
-        if (key === 'k') {
+        if (match.action === 'keyboard') {
+            e.preventDefault();
             openKeyboard();
             return;
         }
-
-        if (!device.isConnected()) return;
-
-        // Don't send commands if pairing UI is visible
-        if ($('#cancelPairing').is(':visible')) return;
-
-        // Send mapped key command
-        const mappedKey = keymap[key];
-        if (mappedKey) {
-            sendCommand(key, shifted);
-            e.preventDefault();
-        }
+        if (!device.isConnected() || $('#cancelPairing').is(':visible')) return;
+        sendCommand(match.command, match.hold);
+        e.preventDefault();
     });
 }
 
@@ -266,8 +258,7 @@ async function sendCommand(key, shifted = false) {
     appState.updateActivity();
     ipcRenderer.invoke('flashTrayIcon').catch(() => {});
 
-    let cmd = keymap[key];
-    if (Object.values(keymap).includes(key)) cmd = key;
+    const cmd = key;
 
     // Visual feedback
     let displayKey = cmd;
@@ -314,7 +305,7 @@ function startAutoKeyboardPoll(prime = true) {
     autoKeyboardInterval = setInterval(async () => {
         if (pollInFlight) return;
         if (Date.now() < nextPollTime) return;
-        if (localStorage.getItem('autoKeyboard') === 'false') return;
+        if (shortcutSettings.isOpen() || localStorage.getItem('autoKeyboard') === 'false') return;
         if (appState.state !== States.CONNECTED) return;
 
         pollInFlight = true;
@@ -364,7 +355,7 @@ function startAutoKeyboardPoll(prime = true) {
             }
 
             // Open keyboard if primed and keyboard has focus
-            if (autoKeyboardPrimed && focused) {
+            if (autoKeyboardPrimed && focused && !shortcutSettings.isOpen()) {
                 console.log(`${_kb('🪄', 'open')} auto-opening keyboard window`);
                 openKeyboard();
             }
